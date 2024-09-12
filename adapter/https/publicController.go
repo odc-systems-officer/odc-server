@@ -37,8 +37,11 @@ func (publicController *PublicController) slackEquipmentRequestHandle(w http.Res
 			// 	return
 			// }
 			// command := toEquipmentSlackMessageCommand(apiKey, data)
+
+
+
 			command := commands.EquipmentRequestCommand{
-				ApiKey: "1234",
+				ApiKey: "<admin-api-key-here>",
 				Email: "aden@odc.com",
 				Equipment: []string{"equipment1", "equipment2"},
 				StartDate: "2023-01-01",

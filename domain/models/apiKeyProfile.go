@@ -1,9 +1,10 @@
-package domain
+package models
 
-type ApiKeyProfile struct {
-	OwnerEmail string `json:"ownerEmail"`
+type ApiProfile struct {
+	ApiKey string `json:"apiKey"`
+	Email string `json:"email"`
 	UsageCount int `json:"usageCount"`
 	Created string `json:"created"`
 	LastUpdated string `json:"lastUpdated"`
-	Privileges []string `json:"privileges"`
+	PrivilegeLevel int `json:"privilegeLevel"`
 }

@@ -5,20 +5,23 @@ import (
 	"net/http"
 	"odcserver/adapter/https"
 	"odcserver/domain"
+	"odcserver/adapter/sqlite"
 	// "odcserver/domain/persistence"
 )
 
 func main() {
-	// apiRepository := https.ApiRepository{}
+	db, err := sqlite.Initialise()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	apiRepository := sqlite.SqlController{db}
 	slackRepository := https.SlackController{}
 	commandHandler := domain.CommandHandler{
-		// apiRepository: apiRepository,
+		ApiRepository: apiRepository,
 		SlackRepository: slackRepository,
 	}
 
 	publicController := https.PublicController{CommandHandler: commandHandler}
 	publicController.HandleRequests()
-	// https.SendSlackMessage("Hello from Aden :)")
-	// https.HandleRequests()
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
