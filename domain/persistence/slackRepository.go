@@ -1,5 +1,7 @@
 package persistence
 
+import "odcserver/domain/commands"
+
 type SlackRepository interface {
-	SendEquipmentRequestMessage(message string, channel string) error
+	SendEquipmentRequestMessage(command commands.EquipmentRequestCommand) error
 }

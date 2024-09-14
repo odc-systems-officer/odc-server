@@ -7,5 +7,4 @@ type EquipmentRequestCommand struct {
 	StartDate string
 	EndDate string
 	Message string
-	Channel string
 }

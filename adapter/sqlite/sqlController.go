@@ -7,6 +7,7 @@ import (
 	"errors"
 	_ "github.com/mattn/go-sqlite3"
 	"odcserver/domain/models"
+	"odcserver/domain/models/exceptions"
 )
 
 type SqlController struct {
@@ -16,7 +17,7 @@ type SqlController struct {
 func (sqlController SqlController) GetApiProfile(apiKey string) (*models.ApiProfile, error) {	
 	row, err := sqlController.Db.Query("SELECT * FROM apikeys WHERE apiKey = ?", apiKey)
 	if err != nil {
-		return &models.ApiProfile{}, err
+		return nil, err
 	}
 	defer row.Close()
 	for row.Next() { // Iterate and fetch the records from result cursor
@@ -38,10 +39,11 @@ func (sqlController SqlController) GetApiProfile(apiKey string) (*models.ApiProf
 		}
 		return &profile, nil
 	}
-	return &models.ApiProfile{}, errors.New("apiKey not found")
+	return nil, exceptions.ErrApiKeyNotFound
 }
 
 func Initialise() (*sql.DB, error) {
+	os.Remove("odc.db") // Delete the db everytime for now
 	var initMode = false
 	// If database file does not exist, create database
 	if _, err := os.Stat("odc.db"); errors.Is(err, os.ErrNotExist) {
@@ -68,7 +70,7 @@ func Initialise() (*sql.DB, error) {
 			UsageCount: 0,
 			Created: "2024-09-12",
 			LastUpdated: "",
-			PrivilegeLevel: 1,
+			PrivilegeLevel: 100,
 		}
 		saveApiProfile(db, profile)
 	}

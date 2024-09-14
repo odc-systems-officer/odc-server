@@ -2,20 +2,24 @@ package https
 
 import (
 	"fmt"
+  "strings"
 	"github.com/ashwanthkumar/slack-go-webhook"
-  // "odcserver/domain/persistence"
+  "odcserver/domain/commands"
 )
 
 type SlackController struct {}
 
-func (slackController SlackController) SendEquipmentRequestMessage(message string, channel string) error {
-	webhookUrl := "<add webhook url here>"
+func (slackController SlackController) SendEquipmentRequestMessage(command commands.EquipmentRequestCommand) error {
+	webhookUrl := "<slack webhook here>"
     attachment1 := slack.Attachment {}
-    attachment1.AddField(slack.Field { Title: "Author", Value: "Aden Huen" }).AddField(slack.Field { Title: "Status", Value: "Completed" })
-    attachment1.AddAction(slack.Action { Type: "button", Text: "Test Action", Url: "https://google.com", Style: "primary" })
-    attachment1.AddAction(slack.Action { Type: "button", Text: "Cancel", Url: "https://google.com", Style: "danger" })
+    attachment1.AddField(slack.Field { Title: "Email", Value: command.Email })
+    attachment1.AddField(slack.Field { Title: "Equipment", Value: strings.Join(command.Equipment, ", ") })
+    attachment1.AddField(slack.Field { Title: "StartDate", Value: command.StartDate })
+    attachment1.AddField(slack.Field { Title: "EndDate", Value: command.EndDate })
+    attachment1.AddField(slack.Field { Title: "Comments", Value: command.Message })
+    
     payload := slack.Payload {
-      Text: message,
+      Text: "A new equipment request has been received.",
       Username: "odc-bot",
       Channel: "#odc-equipment",
       IconEmoji: ":monkey_face:",
