@@ -9,8 +9,8 @@ import (
 
 type SlackController struct {}
 
-func (slackController SlackController) SendEquipmentRequestMessage(command commands.EquipmentRequestCommand) error {
-	webhookUrl := "<slack webhook here>"
+func (slackController SlackController) SendEquipmentRequestMessage(command commands.EquipmentRequestCommand, slackHookUrl string) error {
+	webhookUrl := slackHookUrl
     attachment1 := slack.Attachment {}
     attachment1.AddField(slack.Field { Title: "Email", Value: command.Email })
     attachment1.AddField(slack.Field { Title: "Equipment", Value: strings.Join(command.Equipment, ", ") })

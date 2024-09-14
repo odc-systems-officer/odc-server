@@ -22,15 +22,17 @@ func (sqlController SqlController) GetApiProfile(apiKey string) (*models.ApiProf
 	defer row.Close()
 	for row.Next() { // Iterate and fetch the records from result cursor
 		var apiKey string
+		var slackHookUrl string
 		var email string
 		var usageCount int
 		var created string
 		var lastUpdated string
 		var privilegeLevel int
-		row.Scan(&apiKey, &email, &usageCount, &created, &lastUpdated, &privilegeLevel)
-		log.Println("apiKey: ", apiKey, " email: ", email, " usageCount: ", usageCount, " created: ", created, " lastUpdated: ", lastUpdated, " privilegeLevel: ", privilegeLevel)
+
+		row.Scan(&apiKey, &slackHookUrl, &email, &usageCount, &created, &lastUpdated, &privilegeLevel)
 		profile := models.ApiProfile{
 			ApiKey: apiKey,
+			SlackHookUrl: slackHookUrl,
 			Email: email,
 			UsageCount: usageCount,
 			Created: created,
@@ -42,7 +44,12 @@ func (sqlController SqlController) GetApiProfile(apiKey string) (*models.ApiProf
 	return nil, exceptions.ErrApiKeyNotFound
 }
 
-func Initialise() (*sql.DB, error) {
+func (sqlController SqlController) SaveApiProfile(apiKey string, profile *models.ApiProfile) error {	
+	err := upsertApiProfile(sqlController.Db, profile)	
+	return err
+}
+
+func Initialise(adminProfile *models.ApiProfile) (*sql.DB, error) {
 	os.Remove("odc.db") // Delete the db everytime for now
 	var initMode = false
 	// If database file does not exist, create database
@@ -63,16 +70,7 @@ func Initialise() (*sql.DB, error) {
 	// Create tables
 	if initMode {
 		createApiKeysTable(db)
-
-		profile := models.ApiProfile{
-			ApiKey: "<admin-api-key-here>",
-			Email: "aden@odc.com",
-			UsageCount: 0,
-			Created: "2024-09-12",
-			LastUpdated: "",
-			PrivilegeLevel: 100,
-		}
-		saveApiProfile(db, profile)
+		upsertApiProfile(db, adminProfile)
 	}
 
 	return db, nil
@@ -81,6 +79,7 @@ func Initialise() (*sql.DB, error) {
 func createApiKeysTable(db *sql.DB) {
 	createApiKeysTableSQL := `CREATE TABLE apikeys (
 		"apiKey" TEXT NOT NULL PRIMARY KEY,
+		"slackHookUrl" TEXT,
 		"email" TEXT,
 		"usageCount" INTEGER,
 		"created" TEXT,
@@ -97,17 +96,31 @@ func createApiKeysTable(db *sql.DB) {
 	log.Println("apiKeys table created")
 }
 
-func saveApiProfile(db *sql.DB, profile models.ApiProfile) error {
-	log.Println("Inserting apiProfile record ...")
-	insertApiProfileSQL := `INSERT INTO apiKeys (apiKey, email, usageCount, created, lastUpdated, privilegeLevel) VALUES (?, ?, ?, ?, ?, ?);`
-	statement, err := db.Prepare(insertApiProfileSQL) // Prepare statement (this is good to avoid SQL injections)
+func upsertApiProfile(db *sql.DB, profile *models.ApiProfile) error {
+	log.Println("Upserting apiProfile record ...")
+	upsertApiProfileSQL := `INSERT INTO apiKeys (apiKey, slackHookUrl, email, usageCount, created, lastUpdated, privilegeLevel) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (apiKey) DO UPDATE SET slackHookUrl = ?, email = ?, usageCount = ?, created = ?, lastUpdated = ?, privilegeLevel = ?;`
+	statement, err := db.Prepare(upsertApiProfileSQL) // Prepare statement (this is good to avoid SQL injections)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	_, err = statement.Exec(profile.ApiKey, profile.Email, profile.UsageCount, profile.Created, profile.LastUpdated, profile.PrivilegeLevel)
+	_, err = statement.Exec(
+		&profile.ApiKey, 
+		&profile.SlackHookUrl,
+		&profile.Email, 
+		&profile.UsageCount, 
+		&profile.Created, 
+		&profile.LastUpdated, 
+		&profile.PrivilegeLevel, 
+		// On conflict
+		&profile.SlackHookUrl,
+		&profile.Email, 
+		&profile.UsageCount, 
+		&profile.Created, 
+		&profile.LastUpdated, 
+		&profile.PrivilegeLevel)
+
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	log.Println("Inserted.")
 	return nil
 }

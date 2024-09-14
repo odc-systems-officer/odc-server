@@ -16,7 +16,7 @@ func (commandHandler *CommandHandler) SendEquipmentSlackMessage(command commands
 		return err
 	}
 	if profile.PrivilegeLevel > 1 {
-		commandHandler.SlackRepository.SendEquipmentRequestMessage(command)
+		commandHandler.SlackRepository.SendEquipmentRequestMessage(command, profile.SlackHookUrl)
 	}
 	return nil
 }

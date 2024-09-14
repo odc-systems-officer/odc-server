@@ -3,5 +3,5 @@ package persistence
 import "odcserver/domain/commands"
 
 type SlackRepository interface {
-	SendEquipmentRequestMessage(command commands.EquipmentRequestCommand) error
+	SendEquipmentRequestMessage(command commands.EquipmentRequestCommand, slackHookUrl string) error
 }
